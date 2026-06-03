@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NHI Governance Agent — Security Console</title>
+    <meta name="description" content="AI-powered Non-Human Identity detection, risk scoring, and drift tracking for GitLab repositories.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Ambient background glows -->
+    <div class="ambient-bg">
+        <div class="grid-overlay"></div>
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="glow glow-3"></div>
+    </div>
+
+    <!-- Header section -->
+    <header id="app-header">
+        <div class="header-left">
+            <div class="logo-container">
+                <div class="shield-icon">🛡️</div>
+                <div class="logo-pulse"></div>
+            </div>
+            <div class="header-text">
+                <h1>NHI Governance Agent</h1>
+                <p class="header-subtitle">AI-Powered Non-Human Identity Scanner · <span class="gemini-badge">Gemini 2.0 Flash</span></p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot"></span>
+                <span class="status-text">Ready</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tab navigation -->
+    <nav id="tab-nav">
+        <div class="tab-container">
+            <button class="tab-btn active" data-tab="scan">
+                <span class="tab-icon">🔍</span>
+                <span class="tab-label">Live Scan</span>
+            </button>
+            <button class="tab-btn" data-tab="history">
+                <span class="tab-icon">📊</span>
+                <span class="tab-label">History & Drift</span>
+            </button>
+            <button class="tab-btn" data-tab="index">
+                <span class="tab-icon">🗂️</span>
+                <span class="tab-label">NHI Index</span>
+            </button>
+        </div>
+        <div class="tab-indicator" id="tabIndicator"></div>
+    </nav>
+
+    <!-- Main content area -->
+    <main id="main-content">
+
+        <!-- Live Scan Panel -->
+        <section class="tab-panel active" id="panel-scan">
+            <!-- Scan Input Form -->
+            <div class="scan-input-container glass-card">
+                <div class="input-row">
+                    <div class="input-wrapper repo-select-wrapper">
+                        <label for="repoSelect">GitLab Project Fleet</label>
+                        <select id="repoSelect" onchange="selectRepo(this.value)">
+                            <option value="">-- Select repository --</option>
+                            <option value="demo">Demo: acme-payments</option>
+                        </select>
+                    </div>
+                    <div class="input-wrapper repo-url-wrapper">
+                        <label for="repoUrl">GitLab / GitHub Repository or Profile URL</label>
+                        <input type="text" id="repoUrl" placeholder="https://github.com/user/repo or https://github.com/user" spellcheck="false" autocomplete="off">
+                    </div>
+                    <div class="input-wrapper repo-token-wrapper">
+                        <label for="gitlabToken">GitLab / GitHub Token (Optional)</label>
+                        <input type="password" id="gitlabToken" placeholder="glpat-... or ghp_..." spellcheck="false" autocomplete="off">
+                    </div>
+                    <button class="btn-scan" id="btnScan" onclick="startScan()">
+                        <span class="btn-icon">⚡</span>
+                        <span class="btn-text">Scan</span>
+                    </button>
+                    <button class="btn-demo" id="btnDemo" onclick="startDemoScan()">
+                        <span class="btn-icon">🎭</span>
+                        <span class="btn-text">Demo</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                    <div class="progress-glow"></div>
+                </div>
+                <p class="progress-text" id="progressText">Initializing scan...</p>
+            </div>
+
+            <!-- Security Health Dashboard -->
+            <div class="metrics-dashboard glass-card" id="metricsDashboard" style="display: none;">
+                <div class="metrics-flex">
+                    <div class="metric-score-container">
+                        <svg class="score-ring" width="80" height="80">
+                            <circle class="score-ring-bg" cx="40" cy="40" r="34" stroke-width="6" fill="transparent"/>
+                            <circle class="score-ring-fill" id="scoreRingFill" cx="40" cy="40" r="34" stroke-width="6" fill="transparent" stroke-dasharray="213.6" stroke-dashoffset="213.6"/>
+                        </svg>
+                        <div class="score-center">
+                            <span class="score-number" id="scoreVal">100</span>
+                            <span class="score-grade" id="scoreGrade">A+</span>
+                        </div>
+                    </div>
+                    <div class="metric-text-box">
+                        <h3>Security Posture Health</h3>
+                        <p>Aggregated risk score calculated using MongoDB index analytics based on weights of active hardcoded credentials.</p>
+                    </div>
+                    <div class="metric-card-divider"></div>
+                    <div class="metric-info-box">
+                        <span class="metric-info-label">Remediation Rate</span>
+                        <span class="metric-info-value" id="remedRateVal">100%</span>
+                        <span class="metric-info-sub">resolved vs active</span>
+                    </div>
+                    <div class="metric-card-divider"></div>
+                    <div class="metric-info-box">
+                        <span class="metric-info-label">Mean Resolution Time</span>
+                        <span class="metric-info-value" id="mttrVal">0.0h</span>
+                        <span class="metric-info-sub">average time to fix</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid" id="statsGrid">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Critical Alert Banner -->
+            <div class="critical-alert" id="criticalAlert">
+                <div class="alert-icon">⚠️</div>
+                <div class="alert-content">
+                    <h3>Immediate Remediation Required</h3>
+                    <p id="criticalAlertText">Critical NHIs detected that require immediate action.</p>
+                </div>
+            </div>
+
+            <!-- Findings List -->
+            <div class="findings-container" id="findingsContainer">
+                <div class="findings-header">
+                    <h2>Scan Findings</h2>
+                    <div class="findings-actions">
+                        <button class="btn-export" id="btnExport" onclick="exportCSV()">
+                            <span>📥</span> Export CSV
+                        </button>
+                    </div>
+                </div>
+                <div class="findings-list" id="findingsList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">🔐</div>
+                <h3>No scan results yet</h3>
+                <p>Enter a GitLab repository URL above and click <strong>Scan</strong>, or try the <strong>Demo</strong> to see the agent in action.</p>
+            </div>
+        </section>
+
+        <!-- History & Drift Panel -->
+        <section class="tab-panel" id="panel-history">
+            <div class="history-controls glass-card">
+                <h2>Scan History & Permission Drift</h2>
+                <p class="section-desc">Track how NHI risk levels change over time. Drift occurs when a credential's risk silently escalates.</p>
+                <button class="btn-seed" onclick="seedDemoData()">
+                    <span>🌱</span> Seed Demo Data
+                </button>
+            </div>
+
+            <!-- Drift Alerts -->
+            <div class="drift-alerts" id="driftAlerts">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Chart Area -->
+            <div class="chart-container glass-card" id="chartContainer">
+                <h3>Risk Trend Over Time</h3>
+                <div class="chart-area" id="chartArea">
+                    <canvas id="riskChart"></canvas>
+                </div>
+                <div class="chart-empty" id="chartEmpty">
+                    <p>📊 No historical data. Click <strong>Seed Demo Data</strong> to populate.</p>
+                </div>
+            </div>
+
+            <!-- Scan History Table -->
+            <div class="history-table-container glass-card" id="historyTableContainer">
+                <h3>Recent Scans</h3>
+                <div class="table-wrapper">
+                    <table class="data-table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Repository</th>
+                                <th>Total</th>
+                                <th>Critical</th>
+                                <th>High</th>
+                                <th>Medium</th>
+                                <th>Low</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- NHI Index Panel -->
+        <section class="tab-panel" id="panel-index">
+            <div class="index-header glass-card">
+                <h2>NHI Identity Index</h2>
+                <p class="section-desc">Centralized inventory of all tracked Non-Human Identities across scans.</p>
+                <div class="index-stats" id="indexStats">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- NHI List -->
+            <div class="nhi-list" id="nhiList">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer section -->
+    <footer id="app-footer">
+        <p>Built with <span class="gemini-badge">Gemini</span> · Google Cloud Agent Builder · GitLab MCP · MongoDB Atlas</p>
+        <p class="footer-sub">Google Cloud Rapid Agent Hackathon 2026</p>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
