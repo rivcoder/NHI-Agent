@@ -1,0 +1,336 @@
+openapi: 3.0.0
+info:
+  title: NHI Governance Agent Tools API
+  description: Backend APIs for the NHI Governance Agent custom tools in Google Cloud Agent Builder.
+  version: 1.0.0
+servers:
+  - url: https://nhi-alert-handler-xxxxxx-uc.a.run.app
+    description: Production Cloud Run Service
+  - url: http://localhost:8080
+    description: Local development server
+paths:
+  /tools/scan:
+    post:
+      summary: scan_repo tool
+      description: Scan a GitLab repository for NHI patterns via GitLab API.
+      operationId: scan_repo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                repo_url:
+                  type: string
+                  description: The full GitLab repository URL to scan.
+                  example: https://gitlab.com/gitlab-org/gitlab-runner
+                gitlab_token:
+                  type: string
+                  description: Optional GitLab personal access token.
+              required:
+                - repo_url
+      responses:
+        '200':
+          description: Successful scan response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  findings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        file:
+                          type: string
+                        line:
+                          type: integer
+                        content:
+                          type: string
+                        pattern:
+                          type: string
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+
+  /tools/score:
+    post:
+      summary: score_findings tool
+      description: Score a list of NHI findings for risk level using Gemini.
+      operationId: score_findings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                findings:
+                  type: array
+                  description: The list of raw findings to score.
+                  items:
+                    type: object
+                    properties:
+                      file:
+                        type: string
+                      line:
+                        type: integer
+                      content:
+                        type: string
+                      pattern:
+                        type: string
+              required:
+                - findings
+      responses:
+        '200':
+          description: Successfully scored findings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scored_findings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        raw:
+                          type: object
+                        risk:
+                          type: string
+                          enum: [CRITICAL, HIGH, MEDIUM, LOW, UNKNOWN]
+                        type:
+                          type: string
+                        reason:
+                          type: string
+                        action:
+                          type: string
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+
+  /tools/save:
+    post:
+      summary: save_to_mongodb tool
+      description: Persist scored findings to MongoDB Atlas.
+      operationId: save_to_mongodb
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                repo_url:
+                  type: string
+                  description: The full GitLab repository URL scanned.
+                scored_findings:
+                  type: array
+                  description: The list of scored findings to persist.
+                  items:
+                    type: object
+              required:
+                - repo_url
+                - scored_findings
+      responses:
+        '200':
+          description: Successfully saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  scan_id:
+                    type: string
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+
+  /tools/drift:
+    post:
+      summary: check_drift tool
+      description: Compare current findings to previous scan snapshot.
+      operationId: check_drift
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                repo_url:
+                  type: string
+                  description: The repository to check drift for.
+              required:
+                - repo_url
+      responses:
+        '200':
+          description: Successful drift check
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  drifts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        file:
+                          type: string
+                        pattern:
+                          type: string
+                        from:
+                          type: string
+                        to:
+                          type: string
+                        at:
+                          type: string
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+
+  /tools/publish:
+    post:
+      summary: publish_alert tool
+      description: Publish a CRITICAL alert to Cloud Pub/Sub topic.
+      operationId: publish_alert
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                repo_url:
+                  type: string
+                  description: The repository where CRITICAL secrets were found.
+                critical_findings:
+                  type: array
+                  description: The list of critical findings.
+                  items:
+                    type: object
+              required:
+                - repo_url
+                - critical_findings
+      responses:
+        '200':
+          description: Alert published successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+
+  /tools/remediate/secret-manager:
+    post:
+      summary: remediate_secret_manager tool
+      description: Upload a sensitive credential securely to Google Cloud Secret Manager.
+      operationId: remediate_secret_manager
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                secret_name:
+                  type: string
+                  description: The name of the secret to create/update.
+                secret_value:
+                  type: string
+                  description: The plaintext value of the secret.
+              required:
+                - secret_name
+                - secret_value
+      responses:
+        '200':
+          description: Secret stored successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  secret_path:
+                    type: string
+                  secret_name:
+                    type: string
+                  message:
+                    type: string
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+
+  /tools/remediate/gitlab-mr:
+    post:
+      summary: remediate_gitlab_mr tool
+      description: Create a branch, commit a code replacement placeholder, and open a GitLab Merge Request.
+      operationId: remediate_gitlab_mr
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                repo_url:
+                  type: string
+                  description: The full GitLab repository URL.
+                file_path:
+                  type: string
+                  description: The path of the file to modify.
+                line:
+                  type: integer
+                  description: The 1-based line number of the secret.
+                secret_value:
+                  type: string
+                  description: The plaintext secret value to replace.
+                secret_placeholder:
+                  type: string
+                  description: The configuration placeholder to write (e.g. os.environ.get(...)).
+              required:
+                - repo_url
+                - file_path
+                - line
+                - secret_value
+                - secret_placeholder
+      responses:
+        '200':
+          description: Merge Request created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  mr_url:
+                    type: string
+                  branch:
+                    type: string
+                  message:
+                    type: string
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+

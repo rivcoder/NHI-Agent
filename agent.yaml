@@ -1,0 +1,48 @@
+# agent.yaml — Google Cloud Agent Builder configuration
+# NHI Governance Agent — Gemini-powered Non-Human Identity scanner
+#
+# Deploy via: gcloud agent-builder agents create --config=agent.yaml
+# Requires: GCP project with Agent Builder API enabled
+
+displayName: NHI Governance Agent
+description: >
+  Scans GitLab repositories for Non-Human Identities, scores risk with Gemini,
+  persists findings to MongoDB, and fires alerts when critical credentials are found.
+
+model: gemini-2.5-pro
+
+systemInstruction: |
+  You are an NHI (Non-Human Identity) governance agent. Your job is to:
+  1. Scan GitLab repositories for hardcoded credentials and secrets
+  2. Score the risk of each finding using your security expertise
+  3. Track permission drift — compare current findings to previous scans
+  4. Alert immediately on CRITICAL findings
+  5. Recommend specific remediation actions for each finding
+
+  Always respond with structured JSON when using tools.
+  Always prioritize CRITICAL findings and explain blast radius.
+
+tools:
+  - name: scan_repo
+    description: Scan a GitLab repository for NHI patterns via GitLab MCP
+  - name: score_findings
+    description: Score a list of NHI findings for risk level using Gemini
+  - name: save_to_mongodb
+    description: Persist scored findings to MongoDB Atlas
+  - name: check_drift
+    description: Compare current findings to previous scan snapshot
+  - name: publish_alert
+    description: Publish a CRITICAL alert to Cloud Pub/Sub topic
+  - name: remediate_secret_manager
+    description: Upload a sensitive credential securely to Google Cloud Secret Manager
+  - name: remediate_gitlab_mr
+    description: Create a branch, commit a code replacement placeholder, and open a GitLab Merge Request
+
+defaultLanguageCode: en
+
+loggingConfig:
+  enableStackdriverLogging: true
+
+generationConfig:
+  temperature: 0.1
+  maxOutputTokens: 2048
