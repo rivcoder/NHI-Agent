@@ -4,7 +4,7 @@
 > Built for the Google Cloud Rapid Agent Hackathon 2026.
 
 ---
-> https://nhi-agent-production.up.railway.app
+> 🌐 **Live Demo**: https://nhi-agent-production.up.railway.app
 ## The Problem
 
 74% of organizations deploying AI agents have no governance over the credentials those agents use. Traditional secret scanners (GitGuardian, TruffleHog) tell you *if* a secret exists at a point in time. Nobody tells you *how that secret's risk is silently growing* — or what it would cost if it leaked today.
