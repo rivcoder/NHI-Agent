@@ -1,7 +1,7 @@
 # 🛡️ NHI Governance Agent
 
 > **AI-powered Non-Human Identity lifecycle governance for GitLab and GitHub repositories.**
-> Built for the Google Cloud Rapid Agent Hackathon 2025.
+> Built for the Google Cloud Rapid Agent Hackathon 2026.
 
 ---
 
