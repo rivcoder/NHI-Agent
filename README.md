@@ -170,9 +170,6 @@ Click **Demo** in the console to load a pre-seeded 7-day scenario:
 - No human noticed. The agent did.
 - History & Drift tab shows the full escalation timeline
 - Click any finding → Ask Gemini Remediation Assistant → see the code diff and WIF migration guide
-
-Or scan a real repo: `https://github.com/rivcoder/Web-Innovations` — 13 CRITICAL findings in a real public repository, including hardcoded passwords with `admin123` as a default fallback value.
-
 ---
 
 ## Why This Wins
@@ -191,7 +188,7 @@ Or scan a real repo: `https://github.com/rivcoder/Web-Innovations` — 13 CRITIC
 
 ## Team
 
-Built for the Google Cloud Rapid Agent Hackathon 2025.
+Built for the Google Cloud Rapid Agent Hackathon 2026.
 
 ---
 
